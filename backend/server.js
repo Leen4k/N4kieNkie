@@ -16,7 +16,7 @@ app.use(cookieParser());
 app.use(cors({ 
     credentials: true,
     origin: "http://localhost:3000"
-}));
+})) ;
 
 
 mongoose.connect(process.env.MONGO_URL) // connect to the mongodb database
@@ -73,6 +73,11 @@ app.get("/profile", (req, res)=>{
     }else{
         res.json(null);
     }
+})
+
+//logout
+app.post("/logout",(req,res) => {
+    res.cookie("token", "").json(true);
 })
 
 app.listen(port,(req,res)=>{
