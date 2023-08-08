@@ -6,13 +6,18 @@ const port = 3168
 const cors = require('cors'); //let the client access our api
 const mongoose = require('mongoose'); //mongoose for connecting to the mongodb database
 const User = require("./models/User.js")  // call the user model file
+const Place = require("./models/Place.js")
 const jwt = require("jsonwebtoken")
 const jwtSecret = "afhlafi32423oi4"
 const cookieParser = require('cookie-parser');
+const imageDownloader = require('image-downloader');
+const multer = require('multer');
+const fs = require('fs');
 
  
 app.use(express.json());
 app.use(cookieParser());
+app.use("/uploads", express.static(__dirname+ "/uploads"))
 app.use(cors({ 
     credentials: true,
     origin: "http://localhost:3000"
@@ -80,6 +85,34 @@ app.post("/logout",(req,res) => {
     res.cookie("token", "").json(true);
 })
 
+//upload link
+app.post("/upload-via-link", async (req, res) => {
+    const {link} = req.body;
+    const newName = "photo" + Date.now() + ".jpg";
+    await imageDownloader.image({
+        url: link,
+        dest: __dirname + "/uploads/" + newName  
+    });
+    res.json(newName);
+})
+
+
+const photosMiddleware = multer({dest:"uploads/"}); 
+//upload image
+app.post("/upload",photosMiddleware.array("photos", 100) ,async (req, res) => {
+    let uploadedFiles = [];
+    console.log(req.files); 
+    for(i=0; i<req.files.length; i++){
+        const {path, originalname} = req.files[i];
+        const parts = originalname.split(".");
+        const ext = parts[parts.length - 1]; 
+        const newPath = path + "." + ext;
+        fs.renameSync(path, newPath);
+        uploadedFiles = [...uploadedFiles, newPath.replace("uploads/","")];
+    }
+    res.json(uploadedFiles);
+})
+
 app.listen(port,(req,res)=>{
     console.log(`listening on port ${port} on the mix`)
-});  
+});   
