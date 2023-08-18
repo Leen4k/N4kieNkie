@@ -7,6 +7,7 @@ const cors = require('cors'); //let the client access our api
 const mongoose = require('mongoose'); //mongoose for connecting to the mongodb database
 const User = require("./models/User.js")  // call the user model file
 const Place = require("./models/Place.js")
+const Booking = require("./models/Booking.js");
 const jwt = require("jsonwebtoken")
 const jwtSecret = "afhlafi32423oi4"
 const cookieParser = require('cookie-parser');
@@ -123,8 +124,8 @@ app.post("/places", async (req, res) => {
                 owner: userData.id,
                 title, address, photos:addedPhotos, description, perks, extraInfo, checkIn, checkOut, maxGuests, price
             }) 
-            res.json(placeDoc);
-        })  
+        res.json(placeDoc);
+    })  
 })
 
 //get a specific places from a user
@@ -167,6 +168,30 @@ app.get("/places", async (req,res) => {
     res.json(await Place.find());
 })
 
+//booking
+app.post("/booking", async (req,res) => {
+    const userData = await getUserDataFromReq(req); 
+    const {place, checkIn, checkOut, numberOfGuests, name, phone, price} = req.body;
+    await Booking.create({place, checkIn, checkOut, numberOfGuests, name, phone, price, user:userData.id}).then((doc)=>{
+        res.json(doc); 
+    }).catch((err) => {
+        throw err;
+    });
+})
+
+const getUserDataFromReq = (req) => {
+    return new Promise((resolve, reject) => {
+        jwt.verify(req.cookies.token, jwtSecret, {}, async (err,userData) => {
+            if (err) throw err;
+            resolve(userData);
+        });
+    });
+}
+
+app.get("/booking", async (req,res)=>{
+    const userData =  await getUserDataFromReq(req);
+    res.json( await Booking.find({user:userData.id}).populate("place"))
+})
 
 app.listen(port,(req,res)=>{
     console.log(`listening on port ${port} on the mix`)
