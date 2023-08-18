@@ -9,10 +9,11 @@ const placeSchema = new Schema({
     photos: [String],
     description: String,
     perks: [String],
-    extraInfo: String,
+    extraInfo: String,  
     checkIn: Number,
     checkOut: Number,
     maxGuests: Number,
+    price: Number,
 },{timestamps: true});
 
 
